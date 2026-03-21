@@ -53,7 +53,7 @@ import joblib
 import numpy as np
 
 # CONFIGURACIÓN DE LA PÁGINA
-st.set_page_config(page_title="Predictor Riesgo ENO", layout="wide")
+st.set_page_config(page_title="NAE Risk Predictor", layout="wide")
 
 # CARGA DE MODELO Y MAPA DE COLUMNAS
 @st.cache_resource
@@ -70,58 +70,58 @@ except FileNotFoundError:
     st.stop()
 
 # 2. INTERFAZ DE USUARIO
-st.title("Herramienta de Predicción de Eventos No-SIDA (ENO)")
-st.markdown("Esta calculadora utiliza un modelo de **Random Forest** para estimar la probabilidad de aparición de eventos no-SIDA.")
+st.title("Non-AIDS-Defining Event (NAE) Prediction Tool")
+st.markdown("This calculator uses a **Random Forest** model to estimate the probability of developing a Non-AIDS Event.")
 
 st.divider()
 
 # Organización por Pestañas
-tab1, tab2, tab3 = st.tabs(["Sociodemográficos", "Analítica y Scores", "Parámetros VIH"])
+tab1, tab2, tab3 = st.tabs(["Sociodemographics", "Labs & Scores", "HIV Parameters"])
 
 with tab1:
     c1, c2 = st.columns(2)
     with c1:
-        edad = st.number_input("Edad (años)", 18, 90, 35)
-        gender = st.selectbox("Género", ["Hombre", "Mujer"])
-        country = st.selectbox("País de origen", ["Spain", "No Spain"])
-        edu = st.selectbox("Nivel Educativo", ["No or compulsory", "Upper secondary or university", "Unknown"])
+        edad = st.number_input("Age (years)", 18, 90, 35)
+        gender = st.selectbox("Gender", ["Hombre", "Mujer"], format_func=lambda x: "Male" if x == "Hombre" else "Female")
+        country = st.selectbox("Country of origin", ["Spain", "No Spain"])
+        edu = st.selectbox("Education level", ["No or compulsory", "Upper secondary or university", "Unknown"])
     with c2:
-        mode = st.selectbox("Modo de transmisión", ["Homo/Bisexual", "Heterosexual", "UDI", "Other/Unknown"])
-        alcohol = st.selectbox("Consumo de Alcohol", ["0", "1", "Unknown"], help="1: Sí, 0: No")
-        smoking = st.selectbox("Tabaquismo", ["0", "1", "Unknown"], help="1: Sí, 0: No")
+        mode = st.selectbox("Transmission Mode", ["Homo/Bisexual", "Heterosexual", "UDI", "Other/Unknown"])
+        alcohol = st.selectbox("Alcohol", ["0", "1", "Unknown"], format_func=lambda x: "No" if x == "0" else ("Yes" if x == "1" else "Unknown"), help="Weekly alcohol consumption in Standard Drink Units (SDU). Does not drink = 0; SDU 1 beer, 1 glass of wine =1; SDU 1 shot of spirits, 1 mixed drink = 2 SDU. If your SDU is 0 select No. If else, select Yes")
+        smoking = st.selectbox("Smoking", ["0", "1", "Unknown"], format_func=lambda x: "No" if x == "0" else ("Yes" if x == "1" else "Unknown"), help=" If you never smoke, select No. If you are an active smoker, smoke ocasionally or ex-smoker select yes")
 
 with tab2:
     c1, c2, c3 = st.columns(3)
     with c1:
-        chol = st.number_input("Colesterol (mg/dL)", 0, 500, 162)
-        gluc = st.number_input("Glucosa (mg/dL)", 0.0, 500.0, 90.0)
+        chol = st.number_input("Cholesterol (mg/dL)", 0, 500, 162)
+        gluc = st.number_input("Glucose (mg/dL)", 0.0, 500.0, 90.0)
         hdl = st.number_input("HDL (mg/dL)", 0, 180, 40)
     with c2:
-        trig = st.number_input("Triglicéridos (mg/dL)", 0, 500, 102)
-        plt = st.number_input("Plaquetas", 0, 1000000, 217000)
+        trig = st.number_input("Triglycerides (mg/dL)", 0, 500, 102)
+        plt = st.number_input("Platelets", 0, 1000000, 217000)
         ast = st.number_input("AST (U/L)", 0, 500, 24)
     with c3:
         alt = st.number_input("ALT (U/L)", 0, 500, 24)
-        tyg = st.number_input("Índice TyG", 1.0, 12.0, 8.4)
+        tyg = st.number_input("TyG index", 1.0, 12.0, 8.4)
         fib4 = st.number_input("FIB-4 Score", 0.0, 75.0, 0.8)
 
 with tab3:
     c1, c2 = st.columns(2)
     with c1:
-        cd4 = st.selectbox("Categoría CD4", ["≥200", "<200", "Unknown"])
-        carga = st.selectbox("Carga Viral Inicial", ["<100.000", "≥100.000", "Unknown"])
-        aids = st.selectbox("Evento SIDA previo (AIDS_Y)", ["No", "Si", "Desconocido"])
-        vhc = st.selectbox("VHC (Hepatitis C)", ["Negativo", "Positivo", "Unknown"])
+        cd4 = st.selectbox("CD4 category", ["≥200", "<200", "Unknown"])
+        carga = st.selectbox("Initial viral load", ["<100.000", "≥100.000", "Unknown"])
+        aids = st.selectbox("Previous AIDS event", ["No", "Si", "Desconocido"], format_func=lambda x: "Yes" if x == "Si" else ("No" if x == "No" else "Unknown"))
+        vhc = st.selectbox("HCV (Hepatitis C)", ["Negativo", "Positivo", "Unknown"], format_func=lambda x: "Negative" if x == "Negativo" else ("Positive" if x == "Positivo" else "Unknown"))
     with c2:
-        vhb = st.selectbox("VHB (Hepatitis B)", ["Negativo", "Positivo", "Unknown"])
-        tar = st.selectbox("Tipo primer TAR", ["2NRTI+1NNRTI", "2NRTI+1PI", "2NRTI+1II", "Other/Unknown"])
+        vhb = st.selectbox("HBV (Hepatitis B)", ["Negativo", "Positivo", "Unknown"], format_func=lambda x: "Negative" if x == "Negativo" else ("Positive" if x == "Positivo" else "Unknown"))
+        tar = st.selectbox("First ART regimen", ["2NRTI+1NNRTI", "2NRTI+1PI", "2NRTI+1II", "Other/Unknown"])
         year_art = st.selectbox("Periodo inicio ART", ['2004–2007', '2008–2011', '2012–2015', '2016–2019', '2020–2024'])
         seguimiento = st.number_input("Tiempo seguimiento (días)", 180, 8000, 2674)
-        death = st.selectbox("Muerte (DEATH_Y)", ["No", "Si"])
+        death = st.selectbox("Muerte (DEATH_Y)", ["No", "Si"], format_func=lambda x: "No" if x == "No" else "Yes")
 
 # PROCESAMIENTO Y PREDICCIÓN
 st.divider()
-if st.button("CALCULAR RIESGO", type="primary", use_container_width=True):
+if st.button("CALCULATE RISK", type="primary", use_container_width=True):
     
     # Crear diccionario con nombres de columnas exactos del entrenamiento
     input_dict = {
@@ -152,21 +152,21 @@ if st.button("CALCULAR RIESGO", type="primary", use_container_width=True):
     prob = modelo.predict_proba(df_final)[0][1]
     
     # Presentación de resultados
-    st.subheader("Resultado de la Evaluación")
+    st.subheader("Evaluation result")
     
     col_score, col_text = st.columns([1, 2])
     
     with col_score:
-        st.metric("Riesgo Estimado", f"{prob:.1%}")
+        st.metric("Estimated risk", f"{prob:.1%}")
         
     with col_text:
         if prob < 0.20:
-            st.success("✅ RIESGO BAJO: El perfil clínico sugiere una baja probabilidad de eventos ENO.")
+            st.success("✅ LOW RISK: The clinical profile suggests a low probability of NAE.")
         elif prob < 0.45:
-            st.warning("⚠️ RIESGO INTERMEDIO: Se recomienda seguimiento clínico estrecho.")
+            st.warning("⚠️ INTERMEDIATE RISK: Close clinical monitoring is recommended.")
         else:
-            st.error("🚨 RIESGO ALTO: El modelo identifica múltiples factores predictores de eventos ENO.")
+            st.error("🚨 HIGH RISK: The model identifies multiple predictive factors for NAE.")
 
-st.sidebar.markdown("### Información del Modelo")
-st.sidebar.info("Este modelo ha sido entrenado con datos de pacientes en seguimiento por VIH. "
-                "La probabilidad mostrada es orientativa y no sustituye el juicio clínico.")
+st.sidebar.markdown("### Model information")
+st.sidebar.info("This model was trained with data from HIV patients under follow-up. "
+                "The probability shown is for guidance and does not replace clinical judgment.")
