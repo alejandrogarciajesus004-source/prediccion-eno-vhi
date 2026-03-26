@@ -98,12 +98,14 @@ with tab2:
         hdl = st.number_input("HDL (mg/dL)", 0, 180, 40)
     with c2:
         trig = st.number_input("Triglycerides (mg/dL)", 0, 500, 102)
-        plt = st.number_input("Platelets", 0, 1000000, 217000)
+        plt = st.number_input("Platelets ", 0, 1000, 217)
         ast = st.number_input("AST (U/L)", 0, 500, 24)
     with c3:
         alt = st.number_input("ALT (U/L)", 0, 500, 24)
-        tyg = st.number_input("TyG index", 1.0, 12.0, 8.4)
-        fib4 = st.number_input("FIB-4 Score", 0.0, 75.0, 0.8)
+        tyg_calc = np.log((trig * gluc) / 2)
+        fib4_calc = (edad * ast) / (plt * np.sqrt(alt))
+        st.write(f"**Calculated TyG:** {tyg_calc:.2f}")
+        st.write(f"**Calculated FIB-4:** {fib4_calc:.2f}")
 
 with tab3:
     c1, c2 = st.columns(2)
@@ -116,8 +118,9 @@ with tab3:
         vhb = st.selectbox("HBV (Hepatitis B)", ["Negativo", "Positivo", "Unknown"], format_func=lambda x: "Negative" if x == "Negativo" else ("Positive" if x == "Positivo" else "Unknown"))
         tar = st.selectbox("First ART regimen", ["2NRTI+1NNRTI", "2NRTI+1PI", "2NRTI+1II", "Other/Unknown"])
         year_art = st.selectbox("Periodo inicio ART", ['2004–2007', '2008–2011', '2012–2015', '2016–2019', '2020–2024'])
-        seguimiento = st.number_input("Tiempo seguimiento (días)", 180, 8000, 2674)
-        death = st.selectbox("Muerte (DEATH_Y)", ["No", "Si"], format_func=lambda x: "No" if x == "No" else "Yes")
+        seguimiento_anios = st.number_input("Follow-up time (years)", 0.5, 25.0, 7.0)
+        seguimiento_dias = seguimiento_anios * 365.25
+        
 
 # PROCESAMIENTO Y PREDICCIÓN
 st.divider()
@@ -127,12 +130,12 @@ if st.button("CALCULATE RISK", type="primary", use_container_width=True):
     input_dict = {
         'edad': edad, 'LAB_V_num_CHOL': chol, 'LAB_V_num_GLUC': gluc, 
         'LAB_V_num_HDL': hdl, 'LAB_V_num_TRIG': trig, 'LAB_V_num_PLT': plt, 
-        'LAB_V_num_AST': ast, 'LAB_V_num_ALT': alt, 'TyG': tyg, 'FIB4': fib4, 
-        'tiempo_seguimiento': seguimiento, 'GENDER': gender, 'MODE_cat': mode,
+        'LAB_V_num_AST': ast, 'LAB_V_num_ALT': alt, 'TyG': tyg_calc, 'FIB4': fib4_calc, 
+        'tiempo_seguimiento': seguimiento_dias, 'GENDER': gender, 'MODE_cat': mode,
         'Country_origin': country, 'EDU_cat_label': edu, 'VHC_ab': vhc, 
         'VHB_ag': vhb, 'carga_inicial_cat': carga, 'CD4_cat': cd4, 
         'ALCOHOL': alcohol, 'SMOKING': smoking, 'Year_of_ART_initiation': year_art, 
-        'tipo_primerTAR': tar, 'AIDS_Y': aids, 'DEATH_Y': death
+        'tipo_primerTAR': tar, 'AIDS_Y': aids, 'DEATH_Y': 'No'
     }
     
     # Convertir a DataFrame y aplicar One-Hot Encoding
