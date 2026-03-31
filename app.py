@@ -128,9 +128,8 @@ if st.button("CALCULATE RISK", type="primary", use_container_width=True):
     
     # Crear diccionario con nombres de columnas exactos del entrenamiento
     input_dict = {
-        'edad': edad, 'LAB_V_num_CHOL': chol, 'LAB_V_num_GLUC': gluc, 
-        'LAB_V_num_HDL': hdl, 'LAB_V_num_TRIG': trig, 'LAB_V_num_PLT': plt, 
-        'LAB_V_num_AST': ast, 'LAB_V_num_ALT': alt, 'TyG': tyg_calc, 'FIB4': fib4_calc, 
+        'edad': edad, 'LAB_V_num_CHOL': chol, 
+        'LAB_V_num_HDL': hdl, 'TyG': tyg_calc, 'FIB4': fib4_calc, 
         'tiempo_seguimiento': seguimiento_dias, 'GENDER': gender, 'MODE_cat': mode,
         'Country_origin': country, 'EDU_cat_label': edu, 'VHC_ab': vhc, 
         'VHB_ag': vhb, 'carga_inicial_cat': carga, 'CD4_cat': cd4, 
