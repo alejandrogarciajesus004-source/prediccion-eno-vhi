@@ -143,7 +143,7 @@ if st.button("CALCULATE RISK", type="primary", use_container_width=True):
     # IMPORTANTE: Convertir a str las columnas que el modelo espera como categóricas
     cols_cat = ['GENDER', 'MODE_cat', 'Country_origin', 'EDU_cat_label', 'VHC_ab', 
                 'VHB_ag', 'carga_inicial_cat', 'CD4_cat', 'ALCOHOL', 'SMOKING', 
-                'Year_of_ART_initiation', 'tipo_primerTAR', 'AIDS_Y', 'DEATH_Y']
+                'Year_of_ART_initiation', 'tipo_primerTAR', 'AIDS_Y']
     df_input[cols_cat] = df_input[cols_cat].astype(str)
     
     # Generar dummies y alinear con el modelo
