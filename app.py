@@ -134,7 +134,7 @@ if st.button("CALCULATE RISK", type="primary", use_container_width=True):
         'Country_origin': country, 'EDU_cat_label': edu, 'VHC_ab': vhc, 
         'VHB_ag': vhb, 'carga_inicial_cat': carga, 'CD4_cat': cd4, 
         'ALCOHOL': alcohol, 'SMOKING': smoking, 'Year_of_ART_initiation': year_art, 
-        'tipo_primerTAR': tar, 'AIDS_Y': aids
+        'tipo_primerTAR': tar, 'AIDS_Y': aids, 'LAB_V_num_PLT': plt * 1000
     }
     
     # Convertir a DataFrame y aplicar One-Hot Encoding
