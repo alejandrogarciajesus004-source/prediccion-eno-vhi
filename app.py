@@ -117,7 +117,7 @@ with tab3:
     with c2:
         vhb = st.selectbox("HBV (Hepatitis B)", ["Negativo", "Positivo", "Unknown"], format_func=lambda x: "Negative" if x == "Negativo" else ("Positive" if x == "Positivo" else "Unknown"))
         tar = st.selectbox("First ART regimen", ["2NRTI+1NNRTI", "2NRTI+1PI", "2NRTI+1II", "Other/Unknown"])
-        year_art = st.selectbox("Periodo inicio ART", ['2004–2007', '2008–2011', '2012–2015', '2016–2019', '2020–2024'])
+        year_art = st.selectbox("Year of ART initiation", ['2004–2007', '2008–2011', '2012–2015', '2016–2019', '2020–2024'])
         seguimiento_anios = st.number_input("Follow-up time (years)", 0.5, 25.0, 7.0)
         seguimiento_dias = seguimiento_anios * 365.25
         
