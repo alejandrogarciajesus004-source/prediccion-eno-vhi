@@ -126,35 +126,47 @@ with tab3:
 st.divider()
 if st.button("CALCULATE RISK", type="primary", use_container_width=True):
     
-    # Crear diccionario con nombres de columnas exactos del entrenamiento
+    # 1. Diccionario con nombres y valores EXACTOS
     input_dict = {
-        'edad': edad, 'LAB_V_num_CHOL': chol, 
-        'LAB_V_num_HDL': hdl, 'TyG': tyg_calc, 'FIB4': fib4_calc, 
-        'tiempo_seguimiento': seguimiento_dias, 'LAB_V_num_PLT': plt * 1000, 'GENDER': gender, 'MODE_cat': mode,
-        'Country_origin': country, 'EDU_cat_label': edu, 'VHC_ab': vhc, 
-        'VHB_ag': vhb, 'carga_inicial_cat': carga, 'CD4_cat': cd4, 
-        'ALCOHOL': alcohol, 'SMOKING': smoking, 'Year_of_ART_initiation': year_art, 
-        'tipo_primerTAR': tar, 'AIDS_Y': aids 
+        'edad': edad, 
+        'LAB_V_num_CHOL': chol, 
+        'LAB_V_num_HDL': hdl, 
+        'TyG': tyg_calc, 
+        'FIB4': fib4_calc, 
+        'tiempo_seguimiento': seguimiento_dias, 
+        'LAB_V_num_PLT': plt * 1000, 
+        'GENDER': gender, 
+        'MODE_cat': mode,
+        'Country_origin': country, 
+        'EDU_cat_label': edu, 
+        'VHC_ab': vhc, 
+        'VHB_ag': vhb, 
+        'carga_inicial_cat': carga, 
+        'CD4_cat': cd4, 
+        'ALCOHOL': alcohol, 
+        'SMOKING': smoking, 
+        'Year_of_ART_initiation': year_art, 
+        'tipo_primerTAR': tar, 
+        'AIDS_Y': aids,
+        'DEATH_Y': 'No'  # Agregamos esto para evitar que el modelo asuma valores extraños
     }
     
-    # Convertir a DataFrame y aplicar One-Hot Encoding
     df_input = pd.DataFrame([input_dict])
     
-    # IMPORTANTE: Convertir a str las columnas que el modelo espera como categóricas
+    # 2. Lista de categóricas (Asegúrate de incluir DEATH_Y aquí también)
     cols_cat = ['GENDER', 'MODE_cat', 'Country_origin', 'EDU_cat_label', 'VHC_ab', 
                 'VHB_ag', 'carga_inicial_cat', 'CD4_cat', 'ALCOHOL', 'SMOKING', 
-                'Year_of_ART_initiation', 'tipo_primerTAR', 'AIDS_Y']
+                'Year_of_ART_initiation', 'tipo_primerTAR', 'AIDS_Y', 'DEATH_Y']
+    
     df_input[cols_cat] = df_input[cols_cat].astype(str)
     
-    # Generar dummies y alinear con el modelo
+    # 3. Generar dummies
     df_dummies = pd.get_dummies(df_input)
+    
+    # 4. Alinear con las columnas del entrenamiento
     df_final = df_dummies.reindex(columns=columnas_entrenamiento, fill_value=0)
     
-    # Añade esto temporalmente dentro del botón de calcular
-    st.write("Datos que recibe el modelo (Primeras 5 columnas):")
-    st.dataframe(df_final.head())
-    
-    # Predicción
+    # 5. Predicción
     prob = modelo.predict_proba(df_final)[0][1]
     
     # Presentación de resultados
