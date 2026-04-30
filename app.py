@@ -126,8 +126,8 @@ with tab3:
 st.divider()
 if st.button("CALCULATE RISK", type="primary", use_container_width=True):
     
-    # 1. Diccionario con nombres y valores EXACTOS
- input_dict = {
+ # 1. Diccionario con nombres y valores EXACTOS
+   input_dict = {
         'edad': edad, 
         'LAB_V_num_CHOL': chol, 
         'LAB_V_num_HDL': hdl, 
