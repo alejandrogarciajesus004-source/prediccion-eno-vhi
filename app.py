@@ -126,8 +126,8 @@ with tab3:
 st.divider()
 if st.button("CALCULATE RISK", type="primary", use_container_width=True):
     
- # 1. Diccionario con nombres y valores EXACTOS
-   input_dict = {
+    # 1. Diccionario con nombres y valores EXACTOS
+    input_dict = {
         'edad': edad, 
         'LAB_V_num_CHOL': chol, 
         'LAB_V_num_HDL': hdl, 
@@ -153,10 +153,12 @@ if st.button("CALCULATE RISK", type="primary", use_container_width=True):
     
     df_input = pd.DataFrame([input_dict])
     
-    # 2. Lista de categóricas (Asegúrate de incluir DEATH_Y aquí también)
-    cols_cat = ['GENDER', 'MODE_cat', 'Country_origin', 'EDU_cat_label', 'VHC_ab', 
-                'VHB_ag', 'carga_inicial_cat', 'CD4_cat', 'ALCOHOL', 'SMOKING', 
-                'Year_of_ART_initiation', 'tipo_primerTAR', 'AIDS_Y', 'DEATH_Y']
+    # 2. Lista de categóricas
+    cols_cat = [
+        'GENDER', 'MODE_cat', 'Country_origin', 'EDU_cat_label', 'VHC_ab', 
+        'VHB_ag', 'carga_inicial_cat', 'CD4_cat', 'ALCOHOL', 'SMOKING', 
+        'Year_of_ART_initiation', 'tipo_primerTAR', 'AIDS_Y', 'DEATH_Y'
+    ]
     
     df_input[cols_cat] = df_input[cols_cat].astype(str)
     
