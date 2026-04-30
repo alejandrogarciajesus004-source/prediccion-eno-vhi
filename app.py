@@ -71,7 +71,7 @@ with tab2:
         tyg_visual = np.log((trig * gluc) / 2)
         fib4_visual = (edad * ast) / (plt * np.sqrt(alt)) if plt > 0 and alt > 0 else 0
         st.write(f"**Calculated TyG:** {tyg_visual:.2f}")
-        st.write(f"**Calculated FIB-4:** {fib4_visual:.2f}")
+        st.write(f"**Calculated FIB-4:** {fib4_visual:.4f}")
 
 with tab3:
     c1, c2 = st.columns(2)
