@@ -168,6 +168,10 @@ if st.button("CALCULATE RISK", type="primary", use_container_width=True):
     # 4. Alinear con las columnas del entrenamiento
     df_final = df_dummies.reindex(columns=columnas_entrenamiento, fill_value=0)
     
+    st.write("### 🔍 Debug: Datos que recibe el modelo")
+    st.write("Este es el DataFrame final (solo las primeras columnas):")
+    st.dataframe(df_final)
+    
     # 5. Predicción
     prob = modelo.predict_proba(df_final)[0][1]
     
