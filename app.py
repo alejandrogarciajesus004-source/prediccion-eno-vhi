@@ -150,6 +150,10 @@ if st.button("CALCULATE RISK", type="primary", use_container_width=True):
     df_dummies = pd.get_dummies(df_input)
     df_final = df_dummies.reindex(columns=columnas_entrenamiento, fill_value=0)
     
+    # Añade esto temporalmente dentro del botón de calcular
+    st.write("Datos que recibe el modelo (Primeras 5 columnas):")
+    st.dataframe(df_final.head())
+    
     # Predicción
     prob = modelo.predict_proba(df_final)[0][1]
     
