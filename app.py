@@ -127,13 +127,13 @@ st.divider()
 if st.button("CALCULATE RISK", type="primary", use_container_width=True):
     
     # 1. Diccionario con nombres y valores EXACTOS
-    input_dict = {
+   input_dict = {
         'edad': edad, 
         'LAB_V_num_CHOL': chol, 
         'LAB_V_num_HDL': hdl, 
         'TyG': tyg_calc, 
         'FIB4': fib4_calc, 
-        'tiempo_seguimiento': seguimiento_dias, 
+        'tiempo_seguimiento': seguimiento_anios, 
         'LAB_V_num_PLT': plt * 1000, 
         'GENDER': gender, 
         'MODE_cat': mode,
@@ -148,7 +148,7 @@ if st.button("CALCULATE RISK", type="primary", use_container_width=True):
         'Year_of_ART_initiation': year_art, 
         'tipo_primerTAR': tar, 
         'AIDS_Y': aids,
-        'DEATH_Y': 'No'  # Agregamos esto para evitar que el modelo asuma valores extraños
+        'DEATH_Y': 'No'
     }
     
     df_input = pd.DataFrame([input_dict])
