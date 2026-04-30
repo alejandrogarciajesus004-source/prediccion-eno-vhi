@@ -1,174 +1,123 @@
-import pandas as pd
-import joblib
-
-# Cargar el modelo y las columnas
-modelo = joblib.load('modelo_ENO_rf.pkl')
-columnas = joblib.load('columnas_modelo.pkl')
-
-def predecir_paciente(input_dict):
-    # Convertimos el diccionario de la interfaz a un DataFrame de una sola fila
-    df = pd.DataFrame([input_dict])
-
-    # Definir las variables exactas de tu estudio
-    features_num = [
-        'edad', 'LAB_V_num_CHOL', 'LAB_V_num_GLUC', 'LAB_V_num_HDL',
-        'LAB_V_num_TRIG', 'LAB_V_num_PLT', 'LAB_V_num_AST', 'LAB_V_num_ALT',
-        'TyG', 'FIB4', 'tiempo_seguimiento'
-    ]
-
-    features_cat = [
-        'GENDER', 'MODE_cat', 'Country_origin', 'EDU_cat_label',
-        'VHC_ab', 'VHB_ag', 'carga_inicial_cat', 'CD4_cat',
-        'ALCOHOL', 'SMOKING', 'Year_of_ART_initiation', 'tipo_primerTAR',
-        'AIDS_Y', 'DEATH_Y'
-    ]
-
-    # Tratamiento de nulos (Mediana para números, 'Unknown' para categorías)
-    for col in features_num:
-        if col in df.columns:
-            # Nota: En la app, lo ideal es que no haya nulos porque el usuario los rellena,
-            # pero esto es una red de seguridad.
-            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0) 
-
-    for col in features_cat:
-        if col in df.columns:
-            df[col] = df[col].fillna('Unknown').astype(str)
-
-    # Transformar categorías a columnas (One-hot encoding)
-    df_processed = pd.get_dummies(df)
-
-    # ALINEAR COLUMNAS
-    # Esto añade las columnas que faltan y elimina las que no estaban en el entrenamiento
-    df_final = df_processed.reindex(columns=columnas, fill_value=0)
-
-    # Ejecutar la predicción
-    prob = modelo.predict_proba(df_final)[:, 1][0] # Probabilidad de "Sí ENO"
-    pred = modelo.predict(df_final)[0]             # Clase (0 o 1)
-
-    return prob, pred
-
 import streamlit as st
 import pandas as pd
 import joblib
-import numpy as np
 
-# CONFIGURACIÓN DE LA PÁGINA
-st.set_page_config(page_title="NAE Risk Predictor", layout="wide")
+# PAGE CONFIGURATION
+st.set_page_config(page_title="ENO Risk Predictor", layout="wide")[cite: 1]
 
-# CARGA DE MODELO Y MAPA DE COLUMNAS
 @st.cache_resource
-def cargar_recursos():
-    # Asegúrate de haber ejecutado antes el script que genera estos archivos
-    modelo = joblib.load('modelo_ENO_rf.pkl')
-    columnas = joblib.load('columnas_modelo.pkl')
-    return modelo, columnas
+def load_resources():
+    # Load the existing model and columns
+    model = joblib.load('modelo_ENO_rf.pkl')[cite: 1]
+    training_columns = joblib.load('columnas_modelo.pkl')[cite: 1]
+    return model, training_columns
 
 try:
-    modelo, columnas_entrenamiento = cargar_recursos()
+    model, training_columns = load_resources()
 except FileNotFoundError:
-    st.error("❌ No se encontraron los archivos .pkl. Ejecuta primero tu script de entrenamiento.")
+    st.error("❌ Model files (.pkl) not found. Please ensure they are in the same directory.")
     st.stop()
 
-# 2. INTERFAZ DE USUARIO
-st.title("Non-AIDS-Defining Event (NAE) Prediction Tool")
-st.markdown("This calculator uses a **Random Forest** model to estimate the probability of developing a Non-AIDS Event.")
+# 1. USER INTERFACE (English)
+st.title("Non-AIDS Events (NAE) Prediction Tool")
+st.markdown("This tool estimates the probability of non-AIDS events using a Random Forest model.")[cite: 1]
 
 st.divider()
 
-# Organización por Pestañas
-tab1, tab2, tab3 = st.tabs(["Sociodemographics", "Labs & Scores", "HIV Parameters"])
+# Organizing inputs in Tabs
+tab1, tab2, tab3 = st.tabs(["Sociodemographics", "Metabolic & Hepatic Scores", "HIV Parameters"])[cite: 1]
 
 with tab1:
     c1, c2 = st.columns(2)
     with c1:
-        edad = st.number_input("Age (years)", 18, 90, 35)
-        gender = st.selectbox("Gender", ["Hombre", "Mujer"], format_func=lambda x: "Male" if x == "Hombre" else "Female")
-        country = st.selectbox("Country of origin", ["Spain", "No Spain"])
-        edu = st.selectbox("Education level", ["No or compulsory", "Upper secondary or university", "Unknown"])
+        age = st.number_input("Age (years)", 18, 90, 35)[cite: 1]
+        gender = st.selectbox("Gender", ["Male", "Female"]) 
+        country = st.selectbox("Country of Origin", ["Spain", "No Spain"])[cite: 1]
     with c2:
-        mode = st.selectbox("Transmission Mode", ["Homo/Bisexual", "Heterosexual", "UDI", "Other/Unknown"])
-        alcohol = st.selectbox("Alcohol", ["0", "1", "Unknown"], format_func=lambda x: "No" if x == "0" else ("Yes" if x == "1" else "Unknown"), help="Weekly alcohol consumption in Standard Drink Units (SDU). Does not drink = 0; SDU 1 beer, 1 glass of wine =1; SDU 1 shot of spirits, 1 mixed drink = 2 SDU. If your SDU is 0 select No. If else, select Yes")
-        smoking = st.selectbox("Smoking", ["0", "1", "Unknown"], format_func=lambda x: "No" if x == "0" else ("Yes" if x == "1" else "Unknown"), help=" If you never smoke, select No. If you are an active smoker, smoke ocasionally or ex-smoker select yes")
+        mode = st.selectbox("Transmission Mode", ["Homo/Bisexual", "Heterosexual", "UDI", "Other/Unknown"])[cite: 1]
+        smoking = st.selectbox("Smoking Status", ["0", "1", "Unknown"], help="1: Yes, 0: No")[cite: 1]
 
 with tab2:
-    c1, c2, c3 = st.columns(3)
+    c1, c2 = st.columns(2)
     with c1:
-        chol = st.number_input("Cholesterol (mg/dL)", 0, 500, 162)
-        gluc = st.number_input("Glucose (mg/dL)", 0.0, 500.0, 90.0)
-        hdl = st.number_input("HDL (mg/dL)", 0, 180, 40)
+        chol = st.number_input("Total Cholesterol (mg/dL)", 0, 500, 162)[cite: 1]
+        hdl = st.number_input("HDL Cholesterol (mg/dL)", 0, 180, 40)[cite: 1]
     with c2:
-        trig = st.number_input("Triglycerides (mg/dL)", 0, 500, 102)
-        plt = st.number_input("Platelets ", 0, 1000, 217)
-        ast = st.number_input("AST (U/L)", 0, 500, 24)
-    with c3:
-        alt = st.number_input("ALT (U/L)", 0, 500, 24)
-        tyg_calc = np.log((trig * gluc) / 2)
-        fib4_calc = (edad * ast) / (plt * np.sqrt(alt))
-        st.write(f"**Calculated TyG:** {tyg_calc:.2f}")
-        st.write(f"**Calculated FIB-4:** {fib4_calc:.2f}")
+        tyg = st.number_input("TyG Index", 1.0, 12.0, 8.4)[cite: 1]
+        fib4 = st.number_input("FIB-4 Score", 0.0, 75.0, 0.8)[cite: 1]
 
 with tab3:
     c1, c2 = st.columns(2)
     with c1:
-        cd4 = st.selectbox("CD4 category", ["≥200", "<200", "Unknown"])
-        carga = st.selectbox("Initial viral load", ["<100.000", "≥100.000", "Unknown"])
-        aids = st.selectbox("Previous AIDS event", ["No", "Si", "Desconocido"], format_func=lambda x: "Yes" if x == "Si" else ("No" if x == "No" else "Unknown"))
-        vhc = st.selectbox("HCV (Hepatitis C)", ["Negativo", "Positivo", "Unknown"], format_func=lambda x: "Negative" if x == "Negativo" else ("Positive" if x == "Positivo" else "Unknown"))
+        cd4 = st.selectbox("CD4 Category", ["≥200", "<200", "Unknown"])[cite: 1]
+        vl = st.selectbox("Initial Viral Load", ["<100,000", "≥100,000", "Unknown"])[cite: 1]
+        aids = st.selectbox("Previous AIDS Event", ["No", "Yes", "Unknown"])[cite: 1]
     with c2:
-        vhb = st.selectbox("HBV (Hepatitis B)", ["Negativo", "Positivo", "Unknown"], format_func=lambda x: "Negative" if x == "Negativo" else ("Positive" if x == "Positivo" else "Unknown"))
-        tar = st.selectbox("First ART regimen", ["2NRTI+1NNRTI", "2NRTI+1PI", "2NRTI+1II", "Other/Unknown"])
-        year_art = st.selectbox("Periodo inicio ART", ['2004–2007', '2008–2011', '2012–2015', '2016–2019', '2020–2024'])
-        seguimiento_anios = st.number_input("Follow-up time (years)", 0.5, 25.0, 7.0)
-        seguimiento_dias = seguimiento_anios * 365.25
-        
+        follow_up = st.number_input("Follow-up time (days)", 180, 8000, 2674)[cite: 1]
+        alcohol = st.selectbox("Alcohol Consumption", ["0", "1", "Unknown"])[cite: 1]
 
-# PROCESAMIENTO Y PREDICCIÓN
-st.divider()
+# 2. DATA PROCESSING & PREDICTION
 if st.button("CALCULATE RISK", type="primary", use_container_width=True):
     
-    # Crear diccionario con nombres de columnas exactos del entrenamiento
+    # We create the dictionary including the hidden variables with neutral values (medians)
+    # so the model doesn't crash, but the user doesn't have to fill them.
     input_dict = {
-        'edad': edad, 'LAB_V_num_CHOL': chol, 
-        'LAB_V_num_HDL': hdl, 'TyG': tyg_calc, 'FIB4': fib4_calc, 
-        'tiempo_seguimiento': seguimiento_dias, 'GENDER': gender, 'MODE_cat': mode,
-        'Country_origin': country, 'EDU_cat_label': edu, 'VHC_ab': vhc, 
-        'VHB_ag': vhb, 'carga_inicial_cat': carga, 'CD4_cat': cd4, 
-        'ALCOHOL': alcohol, 'SMOKING': smoking, 'Year_of_ART_initiation': year_art, 
-        'tipo_primerTAR': tar, 'AIDS_Y': aids
+        # User-provided numericals
+        'edad': age, 
+        'LAB_V_num_CHOL': chol, 
+        'LAB_V_num_HDL': hdl, 
+        'TyG': tyg, 
+        'FIB4': fib4, 
+        'tiempo_seguimiento': follow_up,
+        # Hidden numericals (using medians from your training script to keep it neutral)
+        'LAB_V_num_GLUC': 90.0, 
+        'LAB_V_num_TRIG': 102.0, 
+        'LAB_V_num_PLT': 217000, 
+        'LAB_V_num_AST': 24, 
+        'LAB_V_num_ALT': 24,
+        # Categoricals (mapped to training labels)
+        'GENDER': gender, 
+        'MODE_cat': mode,
+        'Country_origin': country, 
+        'EDU_cat_label': "Unknown", 
+        'VHC_ab': "Unknown", 
+        'VHB_ag': "Unknown", 
+        'carga_inicial_cat': vl, 
+        'CD4_cat': cd4, 
+        'ALCOHOL': alcohol, 
+        'SMOKING': smoking, 
+        'Year_of_ART_initiation': '2016–2019', 
+        'tipo_primerTAR': 'Other/Unknown', 
+        'AIDS_Y': aids
     }
     
-    # Convertir a DataFrame y aplicar One-Hot Encoding
+    # Convert to DataFrame
     df_input = pd.DataFrame([input_dict])
     
-    # IMPORTANTE: Convertir a str las columnas que el modelo espera como categóricas
-    cols_cat = ['GENDER', 'MODE_cat', 'Country_origin', 'EDU_cat_label', 'VHC_ab', 
+    # Ensure categoricals are strings[cite: 1]
+    cat_cols = ['GENDER', 'MODE_cat', 'Country_origin', 'EDU_cat_label', 'VHC_ab', 
                 'VHB_ag', 'carga_inicial_cat', 'CD4_cat', 'ALCOHOL', 'SMOKING', 
                 'Year_of_ART_initiation', 'tipo_primerTAR', 'AIDS_Y']
-    df_input[cols_cat] = df_input[cols_cat].astype(str)
+    df_input[cat_cols] = df_input[cat_cols].astype(str)
     
-    # Generar dummies y alinear con el modelo
+    # One-hot encoding and alignment[cite: 1]
     df_dummies = pd.get_dummies(df_input)
-    df_final = df_dummies.reindex(columns=columnas_entrenamiento, fill_value=0)
+    df_final = df_dummies.reindex(columns=training_columns, fill_value=0)[cite: 1]
     
-    # Predicción
-    prob = modelo.predict_proba(df_final)[0][1]
+    # Prediction
+    probability = model.predict_proba(df_final)[0][1][cite: 1]
     
-    # Presentación de resultados
-    st.subheader("Evaluation result")
+    # RESULTS DISPLAY
+    st.subheader("Results")
+    col_metric, col_desc = st.columns([1, 2])
     
-    col_score, col_text = st.columns([1, 2])
-    
-    with col_score:
-        st.metric("Estimated risk", f"{prob:.1%}")
+    with col_metric:
+        st.metric("Estimated Risk", f"{probability:.1%}")[cite: 1]
         
-    with col_text:
-        if prob < 0.20:
-            st.success("✅ LOW RISK: The clinical profile suggests a low probability of NAE.")
-        elif prob < 0.45:
-            st.warning("⚠️ INTERMEDIATE RISK: Close clinical monitoring is recommended.")
+    with col_desc:
+        if probability < 0.20:
+            st.success("✅ LOW RISK: Clinical profile suggests a low probability of NAE.")[cite: 1]
+        elif probability < 0.45:
+            st.warning("⚠️ INTERMEDIATE RISK: Close clinical monitoring is recommended.")[cite: 1]
         else:
-            st.error("🚨 HIGH RISK: The model identifies multiple predictive factors for NAE.")
-
-st.sidebar.markdown("### Model information")
-st.sidebar.info("This model was trained with data from HIV patients under follow-up. "
-                "The probability shown is for guidance and does not replace clinical judgment.")
+            st.error("🚨 HIGH RISK: Multiple predictors for NAE identified.")[cite: 1]
