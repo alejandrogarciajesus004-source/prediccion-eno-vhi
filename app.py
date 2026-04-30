@@ -3,13 +3,13 @@ import pandas as pd
 import joblib
 
 # PAGE CONFIGURATION
-st.set_page_config(page_title="ENO Risk Predictor", layout="wide")[cite: 1]
+st.set_page_config(page_title="ENO Risk Predictor", layout="wide")
 
 @st.cache_resource
 def load_resources():
     # Load the existing model and columns
-    model = joblib.load('modelo_ENO_rf.pkl')[cite: 1]
-    training_columns = joblib.load('columnas_modelo.pkl')[cite: 1]
+    model = joblib.load('modelo_ENO_rf.pkl')
+    training_columns = joblib.load('columnas_modelo.pkl')
     return model, training_columns
 
 try:
@@ -18,43 +18,43 @@ except FileNotFoundError:
     st.error("❌ Model files (.pkl) not found. Please ensure they are in the same directory.")
     st.stop()
 
-# 1. USER INTERFACE (English)
+# 1. USER INTERFACE 
 st.title("Non-AIDS Events (NAE) Prediction Tool")
-st.markdown("This tool estimates the probability of non-AIDS events using a Random Forest model.")[cite: 1]
+st.markdown("This tool estimates the probability of non-AIDS events using a Random Forest model.")
 
 st.divider()
 
 # Organizing inputs in Tabs
-tab1, tab2, tab3 = st.tabs(["Sociodemographics", "Metabolic & Hepatic Scores", "HIV Parameters"])[cite: 1]
+tab1, tab2, tab3 = st.tabs(["Sociodemographics", "Metabolic & Hepatic Scores", "HIV Parameters"])
 
 with tab1:
     c1, c2 = st.columns(2)
     with c1:
-        age = st.number_input("Age (years)", 18, 90, 35)[cite: 1]
+        age = st.number_input("Age (years)", 18, 90, 35)
         gender = st.selectbox("Gender", ["Male", "Female"]) 
-        country = st.selectbox("Country of Origin", ["Spain", "No Spain"])[cite: 1]
+        country = st.selectbox("Country of Origin", ["Spain", "No Spain"])
     with c2:
-        mode = st.selectbox("Transmission Mode", ["Homo/Bisexual", "Heterosexual", "UDI", "Other/Unknown"])[cite: 1]
-        smoking = st.selectbox("Smoking Status", ["0", "1", "Unknown"], help="1: Yes, 0: No")[cite: 1]
+        mode = st.selectbox("Transmission Mode", ["Homo/Bisexual", "Heterosexual", "UDI", "Other/Unknown"])
+        smoking = st.selectbox("Smoking Status", ["0", "1", "Unknown"], help="1: Yes, 0: No")
 
 with tab2:
     c1, c2 = st.columns(2)
     with c1:
-        chol = st.number_input("Total Cholesterol (mg/dL)", 0, 500, 162)[cite: 1]
-        hdl = st.number_input("HDL Cholesterol (mg/dL)", 0, 180, 40)[cite: 1]
+        chol = st.number_input("Total Cholesterol (mg/dL)", 0, 500, 162)
+        hdl = st.number_input("HDL Cholesterol (mg/dL)", 0, 180, 40)
     with c2:
-        tyg = st.number_input("TyG Index", 1.0, 12.0, 8.4)[cite: 1]
-        fib4 = st.number_input("FIB-4 Score", 0.0, 75.0, 0.8)[cite: 1]
+        tyg = st.number_input("TyG Index", 1.0, 12.0, 8.4)
+        fib4 = st.number_input("FIB-4 Score", 0.0, 75.0, 0.8)
 
 with tab3:
     c1, c2 = st.columns(2)
     with c1:
-        cd4 = st.selectbox("CD4 Category", ["≥200", "<200", "Unknown"])[cite: 1]
-        vl = st.selectbox("Initial Viral Load", ["<100,000", "≥100,000", "Unknown"])[cite: 1]
-        aids = st.selectbox("Previous AIDS Event", ["No", "Yes", "Unknown"])[cite: 1]
+        cd4 = st.selectbox("CD4 Category", ["≥200", "<200", "Unknown"])
+        vl = st.selectbox("Initial Viral Load", ["<100,000", "≥100,000", "Unknown"])
+        aids = st.selectbox("Previous AIDS Event", ["No", "Yes", "Unknown"])
     with c2:
-        follow_up = st.number_input("Follow-up time (days)", 180, 8000, 2674)[cite: 1]
-        alcohol = st.selectbox("Alcohol Consumption", ["0", "1", "Unknown"])[cite: 1]
+        follow_up = st.number_input("Follow-up time (days)", 180, 8000, 2674)
+        alcohol = st.selectbox("Alcohol Consumption", ["0", "1", "Unknown"])
 
 # 2. DATA PROCESSING & PREDICTION
 if st.button("CALCULATE RISK", type="primary", use_container_width=True):
@@ -94,30 +94,30 @@ if st.button("CALCULATE RISK", type="primary", use_container_width=True):
     # Convert to DataFrame
     df_input = pd.DataFrame([input_dict])
     
-    # Ensure categoricals are strings[cite: 1]
+    # Ensure categoricals are strings
     cat_cols = ['GENDER', 'MODE_cat', 'Country_origin', 'EDU_cat_label', 'VHC_ab', 
                 'VHB_ag', 'carga_inicial_cat', 'CD4_cat', 'ALCOHOL', 'SMOKING', 
                 'Year_of_ART_initiation', 'tipo_primerTAR', 'AIDS_Y']
     df_input[cat_cols] = df_input[cat_cols].astype(str)
     
-    # One-hot encoding and alignment[cite: 1]
+    # One-hot encoding and alignment
     df_dummies = pd.get_dummies(df_input)
-    df_final = df_dummies.reindex(columns=training_columns, fill_value=0)[cite: 1]
+    df_final = df_dummies.reindex(columns=training_columns, fill_value=0)
     
     # Prediction
-    probability = model.predict_proba(df_final)[0][1][cite: 1]
+    probability = model.predict_proba(df_final)[0][1]
     
     # RESULTS DISPLAY
     st.subheader("Results")
     col_metric, col_desc = st.columns([1, 2])
     
     with col_metric:
-        st.metric("Estimated Risk", f"{probability:.1%}")[cite: 1]
+        st.metric("Estimated Risk", f"{probability:.1%}")
         
     with col_desc:
         if probability < 0.20:
-            st.success("✅ LOW RISK: Clinical profile suggests a low probability of NAE.")[cite: 1]
+            st.success("✅ LOW RISK: Clinical profile suggests a low probability of NAE.")
         elif probability < 0.45:
-            st.warning("⚠️ INTERMEDIATE RISK: Close clinical monitoring is recommended.")[cite: 1]
+            st.warning("⚠️ INTERMEDIATE RISK: Close clinical monitoring is recommended.")
         else:
-            st.error("🚨 HIGH RISK: Multiple predictors for NAE identified.")[cite: 1]
+            st.error("🚨 HIGH RISK: Multiple predictors for NAE identified.")
