@@ -117,7 +117,7 @@ with tab3:
     with c2:
         vhb = st.selectbox("HBV (Hepatitis B)", ["Negativo", "Positivo", "Unknown"], format_func=lambda x: "Negative" if x == "Negativo" else ("Positive" if x == "Positivo" else "Unknown"))
         tar = st.selectbox("First ART regimen", ["2NRTI+1NNRTI", "2NRTI+1PI", "2NRTI+1II", "Other/Unknown"])
-        year_art = st.selectbox("Year of ART initiation", ['2004–2007', '2008–2011', '2012–2015', '2016–2019', '2020–2024'])
+        year_art = st.selectbox("Periodo inicio ART", ['2004–2007', '2008–2011', '2012–2015', '2016–2019', '2020–2024'])
         seguimiento_anios = st.number_input("Follow-up time (years)", 0.5, 25.0, 7.0)
         seguimiento_dias = seguimiento_anios * 365.25
         
@@ -126,53 +126,31 @@ with tab3:
 st.divider()
 if st.button("CALCULATE RISK", type="primary", use_container_width=True):
     
-    # 1. Diccionario con nombres y valores EXACTOS
+    # Crear diccionario con nombres de columnas exactos del entrenamiento
     input_dict = {
-        'edad': edad, 
-        'LAB_V_num_CHOL': chol, 
-        'LAB_V_num_HDL': hdl, 
-        'TyG': tyg_calc, 
-        'FIB4': fib4_calc, 
-        'tiempo_seguimiento': seguimiento_anios, 
-        'LAB_V_num_PLT': plt * 1000, 
-        'GENDER': gender, 
-        'MODE_cat': mode,
-        'Country_origin': country, 
-        'EDU_cat_label': edu, 
-        'VHC_ab': vhc, 
-        'VHB_ag': vhb, 
-        'carga_inicial_cat': carga, 
-        'CD4_cat': cd4, 
-        'ALCOHOL': alcohol, 
-        'SMOKING': smoking, 
-        'Year_of_ART_initiation': year_art, 
-        'tipo_primerTAR': tar, 
-        'AIDS_Y': aids,
-        'DEATH_Y': 'No'
+        'edad': edad, 'LAB_V_num_CHOL': chol, 
+        'LAB_V_num_HDL': hdl, 'TyG': tyg_calc, 'FIB4': fib4_calc, 
+        'tiempo_seguimiento': seguimiento_dias, 'GENDER': gender, 'MODE_cat': mode,
+        'Country_origin': country, 'EDU_cat_label': edu, 'VHC_ab': vhc, 
+        'VHB_ag': vhb, 'carga_inicial_cat': carga, 'CD4_cat': cd4, 
+        'ALCOHOL': alcohol, 'SMOKING': smoking, 'Year_of_ART_initiation': year_art, 
+        'tipo_primerTAR': tar, 'AIDS_Y': aids
     }
     
+    # Convertir a DataFrame y aplicar One-Hot Encoding
     df_input = pd.DataFrame([input_dict])
     
-    # 2. Lista de categóricas
-    cols_cat = [
-        'GENDER', 'MODE_cat', 'Country_origin', 'EDU_cat_label', 'VHC_ab', 
-        'VHB_ag', 'carga_inicial_cat', 'CD4_cat', 'ALCOHOL', 'SMOKING', 
-        'Year_of_ART_initiation', 'tipo_primerTAR', 'AIDS_Y', 'DEATH_Y'
-    ]
-    
+    # IMPORTANTE: Convertir a str las columnas que el modelo espera como categóricas
+    cols_cat = ['GENDER', 'MODE_cat', 'Country_origin', 'EDU_cat_label', 'VHC_ab', 
+                'VHB_ag', 'carga_inicial_cat', 'CD4_cat', 'ALCOHOL', 'SMOKING', 
+                'Year_of_ART_initiation', 'tipo_primerTAR', 'AIDS_Y']
     df_input[cols_cat] = df_input[cols_cat].astype(str)
     
-    # 3. Generar dummies
+    # Generar dummies y alinear con el modelo
     df_dummies = pd.get_dummies(df_input)
-    
-    # 4. Alinear con las columnas del entrenamiento
     df_final = df_dummies.reindex(columns=columnas_entrenamiento, fill_value=0)
     
-    st.write("### 🔍 Debug: Datos que recibe el modelo")
-    st.write("Este es el DataFrame final (solo las primeras columnas):")
-    st.dataframe(df_final)
-    
-    # 5. Predicción
+    # Predicción
     prob = modelo.predict_proba(df_final)[0][1]
     
     # Presentación de resultados
