@@ -164,7 +164,7 @@ st.divider()
 if st.button('CALCULATE RISK', type='primary', use_container_width=True):
 
   # Protección contra división por cero
-  plt_s = plt_val if plt > 0 else MEDIANAS['LAB_V_num_PLT']
+  plt_s = plt if plt > 0 else MEDIANAS['LAB_V_num_PLT']
   alt_s = alt if alt > 0 else MEDIANAS['LAB_V_num_ALT']
 
   # Scores finales
