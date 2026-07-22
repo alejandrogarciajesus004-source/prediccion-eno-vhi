@@ -46,8 +46,8 @@ MEDIANAS = {
 # 3. INTERFAZ DE USUARIO
 st.title("Non-AIDS-Defining Event (NAE) Risk Calculator")
 st.markdown(
-    ' This tool estimates the probability of Esta herramienta estima la probabilidad de desarrollar un evento no'
-    ' SIDA (ENO) en pacientes con VIH mediante el modelo óptimo seleccionado.'
+    ' This tool estimates the risk of suffering a non-AIDS defining event with a 
+    ' machine learning model'
 )
 
 st.divider()
