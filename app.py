@@ -46,7 +46,7 @@ MEDIANAS = {
 # 3. INTERFAZ DE USUARIO
 st.title("Non-AIDS-Defining Event (NAE) Risk Calculator")
 st.markdown(
-    ' This tool estimates the risk of suffering a non-AIDS defining event with a 
+    ' This tool estimates the risk of suffering a non-AIDS defining event with a '
     ' machine learning model'
 )
 
