@@ -224,55 +224,53 @@ if st.button('CALCULATE RISK', type='primary', use_container_width=True):
           ' factors for NAE.'
       )
 
-  # 5. EXPLICACIÓN INDIVIDUALIZADA SHAP (CORREGIDA)
-  st.divider()
-  st.subheader('Individualized Explanation (SHAP Analysis)')
-  st.write(
-      'This waterfall plot illustrates how each clinical factor pushes the'
-      ' prediction higher (red) or lower (blue) relative to the baseline'
-      ' risk.'
-  )
-
-  try:
-    # Extraer preprocesador y clasificador del pipeline
-    preprocessor = pipeline.named_steps['preprocessor']
-    classifier = pipeline.named_steps['classifier']
-
-    # Preprocesar datos del paciente
-    X_prep = preprocessor.transform(df_patient)
-    feature_names = preprocessor.get_feature_names_out()
-
-    # Nombres de variables limpios
-    clean_names = [
-        col.replace('num__', '').replace('cat__', '') for col in feature_names
-    ]
-    X_df = pd.DataFrame(X_prep, columns=clean_names)
-
-    # SHAP Explainer
-    explainer = shap.TreeExplainer(classifier)
-    shap_values = explainer(X_df)
-
-    # Seleccionar la clase de interés (Clase 1: Sí ENO)
-    if len(shap_values.shape) == 3:
-      single_shap = shap_values[0, :, 1]
-    else:
-      single_shap = shap_values[0]
-
-    # Generar gráfico Waterfall de manera limpia
-    plt.figure(figsize=(9, 5))
-    shap.plots.waterfall(single_shap, max_display=10, show=False)
-    plt.tight_layout()
-
-    # Renderizar en Streamlit usando la figura actual
-    st.pyplot(plt.gcf())
-    plt.close()
-
-  except Exception as e:
-    st.warning(
-        f'Could not render individual SHAP explanation: {e}. Note that SHAP'
-        ' waterfall plots are optimized for tree-based estimators.'
+ # 5. EXPLICACIÓN INDIVIDUALIZADA SHAP (CORREGIDA Y BLINDEADA)
+    st.divider()
+    st.subheader("Individualized Explanation (SHAP Analysis)")
+    st.write(
+        "This waterfall plot illustrates how each clinical factor pushes the prediction "
+        "higher (red) or lower (blue) relative to the baseline risk."
     )
 
+    try:
+        # Extraer preprocesador y clasificador del pipeline
+        preprocessor = pipeline.named_steps['preprocessor']
+        classifier = pipeline.named_steps['classifier']
+
+        # Preprocesar datos del paciente
+        X_prep = preprocessor.transform(df_patient)
+        feature_names = preprocessor.get_feature_names_out()
+
+        # Nombres de variables limpios para la interfaz
+        clean_names = [col.replace('num__', '').replace('cat__', '') for col in feature_names]
+        X_df = pd.DataFrame(X_prep, columns=clean_names)
+
+        # SHAP Explainer
+        explainer = shap.TreeExplainer(classifier)
+        shap_values = explainer(X_df)
+
+        # Seleccionar la clase de interés (Clase 1: Sí ENO)
+        if len(shap_values.shape) == 3:
+            single_shap = shap_values[0, :, 1]
+        else:
+            single_shap = shap_values[0]
+
+        # CREACIÓN EXPLÍCITA DE LA FIGURA DE MATPLOTLIB
+        fig, ax = plt.subplots(figsize=(8, 5))
+        
+        # Le pasamos la figura/eje directamente a SHAP
+        shap.plots.waterfall(single_shap, max_display=10, show=False)
+        
+        # Ajustamos layout y renderizamos de forma limpia
+        plt.tight_layout()
+        st.pyplot(fig)
+        plt.close(fig) # Cerramos la figura para liberar memoria
+
+    except Exception as e:
+        st.warning(
+            f"Could not render individual SHAP explanation: {e}. "
+            "Note that SHAP waterfall plots are optimized for tree-based estimators."
+        )
 # SIDEBAR INFORMATIVA
 st.sidebar.markdown("### Model Information")
 st.sidebar.info(
