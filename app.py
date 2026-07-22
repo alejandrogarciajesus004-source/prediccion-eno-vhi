@@ -46,7 +46,7 @@ MEDIANAS = {
 # 3. INTERFAZ DE USUARIO
 st.title("Non-AIDS-Defining Event (NAE) Risk Calculator")
 st.markdown(
-    'Esta herramienta estima la probabilidad de desarrollar un evento no'
+    ' This tool estimates the probability of Esta herramienta estima la probabilidad de desarrollar un evento no'
     ' SIDA (ENO) en pacientes con VIH mediante el modelo óptimo seleccionado.'
 )
 
@@ -164,14 +164,14 @@ st.divider()
 if st.button('CALCULATE RISK', type='primary', use_container_width=True):
 
   # Protección contra división por cero
-  plt_s = plt if plt > 0 else MEDIANAS['LAB_V_num_PLT']
+  plt_s = plt_val if plt_val > 0 else MEDIANAS['LAB_V_num_PLT']
   alt_s = alt if alt > 0 else MEDIANAS['LAB_V_num_ALT']
 
   # Scores finales
   tyg_f = np.log((trig * gluc) / 2)
   fib4_f = (edad * ast) / (plt_s * np.sqrt(alt_s))
 
-  # Construir DataFrame idéntico al original
+  # Construir DataFrame
   input_dict = {
       'edad': edad,
       'LAB_V_num_CHOL': chol,
@@ -199,80 +199,82 @@ if st.button('CALCULATE RISK', type='primary', use_container_width=True):
   # Predicción con el Pipeline
   prob = pipeline.predict_proba(df_patient)[0][1]
 
-  # MOSTRAR RESULTADOS
+  # MOSTRAR RESULTADOS (UMBRALES RECALIBRADOS PARA MODELOS CON SMOTE)
   st.subheader('Evaluation Result')
   col_score, col_text = st.columns([1, 2])
 
   with col_score:
-    st.metric('Estimated Risk', f'{prob:.1%}')
+    st.metric('Estimated Risk Index', f'{prob:.1%}')
 
   with col_text:
-    if prob < 0.20:
+    # Umbrales ajustados al balanceo de clases (SMOTE)
+    if prob < 0.30:  # <30% se considera Bajo Riesgo con datos sintéticos 50/50
       st.success(
           '✅ **LOW RISK:** The clinical profile suggests a low probability of'
           ' NAE.'
       )
-    elif prob < 0.45:
+    elif prob < 0.55:
       st.warning(
-          '⚠️ **INTERMEDIATE RISK:** Close clinical monitoring is recommended.'
+          '⚠️ **INTERMEDIATE RISK:** Moderate predictive score. Close clinical'
+          ' monitoring recommended.'
       )
     else:
       st.error(
-          '🚨 **HIGH RISK:** The model identifies multiple predictive factors'
-          ' for NAE.'
+          '🚨 **HIGH RISK:** The model identifies multiple strong risk'
+          ' factors for NAE.'
       )
 
-  # 5. EXPLICACIÓN INDIVIDUALIZADA SHAP (Waterfall Plot)
+  # 5. EXPLICACIÓN INDIVIDUALIZADA SHAP (CORREGIDA)
   st.divider()
   st.subheader('Individualized Explanation (SHAP Analysis)')
   st.write(
-      'This chart shows how each patient feature pushed the probability higher'
-      ' (red) or lower (blue).'
+      'This waterfall plot illustrates how each clinical factor pushes the'
+      ' prediction higher (red) or lower (blue) relative to the baseline'
+      ' risk.'
   )
 
   try:
-    # Extraer componentes del Pipeline
+    # Extraer preprocesador y clasificador del pipeline
     preprocessor = pipeline.named_steps['preprocessor']
     classifier = pipeline.named_steps['classifier']
 
-    # Preprocesar la muestra del paciente
-    X_patient_prep = preprocessor.transform(df_patient)
+    # Preprocesar datos del paciente
+    X_prep = preprocessor.transform(df_patient)
     feature_names = preprocessor.get_feature_names_out()
 
-    # Formatear nombres de columnas para lectura limpia
-    clean_feature_names = [
+    # Nombres de variables limpios
+    clean_names = [
         col.replace('num__', '').replace('cat__', '') for col in feature_names
     ]
+    X_df = pd.DataFrame(X_prep, columns=clean_names)
 
-    X_patient_df = pd.DataFrame(
-        X_patient_prep, columns=clean_feature_names, index=[0]
-    )
-
-    # Crear explainer
+    # SHAP Explainer
     explainer = shap.TreeExplainer(classifier)
-    shap_values = explainer(X_patient_df)
+    shap_values = explainer(X_df)
 
-    # Extraer clase 1 (Sí ENO) si el modelo devuelve estructura multiclase
+    # Seleccionar la clase de interés (Clase 1: Sí ENO)
     if len(shap_values.shape) == 3:
-      shap_single = shap_values[0, :, 1]
+      single_shap = shap_values[0, :, 1]
     else:
-      shap_single = shap_values[0]
+      single_shap = shap_values[0]
 
-    # Graficar Waterfall Plot
-    fig, ax = plt.subplots(figsize=(8, 5))
-    shap.plots.waterfall(shap_single, max_display=10, show=False)
+    # Generar gráfico Waterfall de manera limpia
+    plt.figure(figsize=(9, 5))
+    shap.plots.waterfall(single_shap, max_display=10, show=False)
     plt.tight_layout()
-    st.pyplot(fig)
+
+    # Renderizar en Streamlit usando la figura actual
+    st.pyplot(plt.gcf())
+    plt.close()
 
   except Exception as e:
-    st.info(
-        'Individual SHAP visualization is only available for tree-based'
-        f' models. ({e})'
+    st.warning(
+        f'Could not render individual SHAP explanation: {e}. Note that SHAP'
+        ' waterfall plots are optimized for tree-based estimators.'
     )
 
 # SIDEBAR INFORMATIVA
 st.sidebar.markdown("### Model Information")
 st.sidebar.info(
-    'This predictive tool runs on the optimal pipeline trained across'
-    ' Random Forest, LightGBM, XGBoost, and SVM architectures.'
+    'This predictive tool runs on the optimal pipeline trained across LightGBM architecture.'
 )
