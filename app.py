@@ -98,7 +98,7 @@ with tab2:
     hdl = st.number_input('HDL (mg/dL)', 0, 180, 40)
   with c2:
     trig = st.number_input('Triglycerides (mg/dL)', 0, 500, 102)
-    plt = st.number_input('Platelets (cells/µL)', 0, 1000000, 217000)
+    plt_input = st.number_input('Platelets (cells/µL)', 0, 1000000, 217000)
     ast = st.number_input('AST (U/L)', 0, 500, 24)
   with c3:
     alt = st.number_input('ALT (U/L)', 0, 500, 24)
@@ -164,7 +164,7 @@ st.divider()
 if st.button('CALCULATE RISK', type='primary', use_container_width=True):
 
   # Protección contra división por cero
-  plt_s = plt if plt > 0 else MEDIANAS['LAB_V_num_PLT']
+  plt_s = plt_input if plt_input > 0 else MEDIANAS['LAB_V_num_PLT']
   alt_s = alt if alt > 0 else MEDIANAS['LAB_V_num_ALT']
 
   # Scores finales
@@ -256,7 +256,7 @@ if st.button('CALCULATE RISK', type='primary', use_container_width=True):
             single_shap = shap_values[0]
 
         # CREACIÓN EXPLÍCITA DE LA FIGURA DE MATPLOTLIB
-        fig, ax = plt.subplots(figsize=(8, 5))
+        fig, ax = plt.subplots(figsize=(9, 5))
         
         # Le pasamos la figura/eje directamente a SHAP
         shap.plots.waterfall(single_shap, max_display=10, show=False)
