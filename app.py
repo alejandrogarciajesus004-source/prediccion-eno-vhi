@@ -106,7 +106,7 @@ with tab2:
     # Cálculos visuales informativos
     tyg_visual = np.log((trig * gluc) / 2)
     fib4_visual = (
-        (edad * ast) / (plt * np.sqrt(alt)) if plt > 0 and alt > 0 else 0
+        (edad * ast) / (plt_input * np.sqrt(alt)) if plt > 0 and alt > 0 else 0
     )
     st.info(
         f"**Calculated TyG:** {tyg_visual:.2f}\n\n**Calculated FIB-4:**"
