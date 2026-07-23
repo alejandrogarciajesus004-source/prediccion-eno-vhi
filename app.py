@@ -99,6 +99,7 @@ with tab2:
   with c2:
     trig = st.number_input('Triglycerides (mg/dL)', 0, 500, 102)
     plt_input = st.number_input('Platelets (cells/µL)', 0, 1000000, 217000)
+    plt_thousands = plt_input / 1000.0 if plt_input > 0 else (MEDIANAS['LAB_V_num_PLT'] / 1000.0)
     ast = st.number_input('AST (U/L)', 0, 500, 24)
   with c3:
     alt = st.number_input('ALT (U/L)', 0, 500, 24)
@@ -106,7 +107,7 @@ with tab2:
     # Cálculos visuales informativos
     tyg_visual = np.log((trig * gluc) / 2)
     fib4_visual = (
-        (edad * ast) / (plt_input * np.sqrt(alt)) if plt_input > 0 and alt > 0 else 0
+        (edad * ast) / (plt_thousands * np.sqrt(alt)) if plt_thousands > 0 and alt > 0 else 0
     )
     st.info(
         f"**Calculated TyG:** {tyg_visual:.2f}\n\n**Calculated FIB-4:**"
@@ -164,7 +165,7 @@ st.divider()
 if st.button('CALCULATE RISK', type='primary', use_container_width=True):
 
   # Protección contra división por cero
-  plt_s = plt_input if plt_input > 0 else MEDIANAS['LAB_V_num_PLT']
+  plt_s = (plt_input / 1000.0) if plt_input > 0 else (MEDIANAS['LAB_V_num_PLT'] / 1000.0)
   alt_s = alt if alt > 0 else MEDIANAS['LAB_V_num_ALT']
 
   # Scores finales
