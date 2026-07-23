@@ -98,20 +98,30 @@ with tab2:
     hdl = st.number_input('HDL (mg/dL)', 0, 180, 40)
   with c2:
     trig = st.number_input('Triglycerides (mg/dL)', 0, 500, 102)
+    # Plaquetas en unidades absolutas (ej. 217000)
     plt_input = st.number_input('Platelets (cells/µL)', 0, 1000000, 217000)
-    plt_thousands = plt_input / 1000.0 if plt_input > 0 else (MEDIANAS['LAB_V_num_PLT'] / 1000.0)
     ast = st.number_input('AST (U/L)', 0, 500, 24)
   with c3:
     alt = st.number_input('ALT (U/L)', 0, 500, 24)
 
-    # Cálculos visuales informativos
+    # Conversión a miles ÚNICAMENTE para la ecuación del FIB-4
+    plt_in_thousands = (
+        plt_input / 1000.0
+        if plt_input > 0
+        else (MEDIANAS['LAB_V_num_PLT'] / 1000.0)
+    )
+
+    # Cálculos visuales
     tyg_visual = np.log((trig * gluc) / 2)
     fib4_visual = (
-        (edad * ast) / (plt_thousands * np.sqrt(alt)) if plt_thousands > 0 and alt > 0 else 0
+        (edad * ast) / (plt_in_thousands * np.sqrt(alt))
+        if plt_in_thousands > 0 and alt > 0
+        else 0
     )
+
     st.info(
         f"**Calculated TyG:** {tyg_visual:.2f}\n\n**Calculated FIB-4:**"
-        f' {fib4_visual:.4f}'
+        f' {fib4_visual:.2f}'
     )
 
 with tab3:
@@ -160,26 +170,29 @@ with tab3:
     )
     seguimiento_dias = seguimiento_anios * 365.25
 
-# 4. PROCESAMIENTO Y PREDICCIÓN
+# --- 4. PROCESAMIENTO Y PREDICCIÓN ---
 st.divider()
 if st.button('CALCULATE RISK', type='primary', use_container_width=True):
 
-  # Protección contra división por cero
-  plt_s = (plt_input / 1000.0) if plt_input > 0 else (MEDIANAS['LAB_V_num_PLT'] / 1000.0)
+  # Plaquetas en unidades absolutas para el diccionario del modelo
+  plt_s = plt_input if plt_input > 0 else MEDIANAS['LAB_V_num_PLT']
   alt_s = alt if alt > 0 else MEDIANAS['LAB_V_num_ALT']
 
-  # Scores finales
+  # Plaquetas en miles SOLAMENTE para el cálculo de FIB4
+  plt_thousands_for_fib4 = plt_s / 1000.0
+
+  # Scores finales con la escala idéntica a la del CSV
   tyg_f = np.log((trig * gluc) / 2)
-  fib4_f = (edad * ast) / (plt_s * np.sqrt(alt_s))
+  fib4_f = (edad * ast) / (plt_thousands_for_fib4 * np.sqrt(alt_s))
 
   # Construir DataFrame
   input_dict = {
       'edad': edad,
       'LAB_V_num_CHOL': chol,
       'LAB_V_num_HDL': hdl,
-      'TyG': tyg_f,
-      'FIB4': fib4_f,
-      'tiempo_seguimiento': seguimiento_dias,
+      'TyG': tyg_f,  # ~8.4
+      'FIB4': fib4_f,  # ~0.81
+      'tiempo_seguimiento': seguimiento_dias,  # en DÍAS
       'GENDER': str(gender),
       'MODE_cat': str(mode),
       'Country_origin': str(country),
@@ -200,7 +213,7 @@ if st.button('CALCULATE RISK', type='primary', use_container_width=True):
   # Predicción con el Pipeline
   prob = pipeline.predict_proba(df_patient)[0][1]
 
-  # MOSTRAR RESULTADOS (UMBRALES RECALIBRADOS PARA MODELOS CON SMOTE)
+  # MOSTRAR RESULTADOS
   st.subheader('Evaluation Result')
   col_score, col_text = st.columns([1, 2])
 
@@ -208,8 +221,7 @@ if st.button('CALCULATE RISK', type='primary', use_container_width=True):
     st.metric('Estimated Risk Index', f'{prob:.1%}')
 
   with col_text:
-    # Umbrales ajustados al balanceo de clases (SMOTE)
-    if prob < 0.30:  # <30% se considera Bajo Riesgo con datos sintéticos 50/50
+    if prob < 0.30:
       st.success(
           '✅ **LOW RISK:** The clinical profile suggests a low probability of'
           ' NAE.'
@@ -224,7 +236,6 @@ if st.button('CALCULATE RISK', type='primary', use_container_width=True):
           '🚨 **HIGH RISK:** The model identifies multiple strong risk'
           ' factors for NAE.'
       )
-
  # 5. EXPLICACIÓN INDIVIDUALIZADA SHAP (CORREGIDA Y BLINDEADA)
     st.divider()
     st.subheader("Individualized Explanation (SHAP Analysis)")
