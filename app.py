@@ -79,15 +79,15 @@ with tab1:
 with tab2:
     c1, c2, c3 = st.columns(3)
     with c1:
-        chol = st.number_input('Cholesterol (LAB_V_num_CHOL, mg/dL)', 0, 500, 162)
-        gluc = st.number_input('Glucose (LAB_V_num_GLUC, mg/dL)', 0.0, 500.0, 90.0)
-        hdl = st.number_input('HDL (LAB_V_num_HDL, mg/dL)', 0, 180, 40)
+        chol = st.number_input('Cholesterol (mg/dL)', 0, 500, 162)
+        gluc = st.number_input('Glucose (mg/dL)', 0.0, 500.0, 90.0)
+        hdl = st.number_input('HDL (mg/dL)', 0, 180, 40)
     with c2:
-        trig = st.number_input('Triglycerides (LAB_V_num_TRIG, mg/dL)', 0, 500, 102)
-        plt_input = st.number_input('Platelets (LAB_V_num_PLT, cells/µL)', 0, 1000000, 217000)
-        ast = st.number_input('AST (LAB_V_num_AST, U/L)', 0, 500, 24)
+        trig = st.number_input('Triglycerides (mg/dL)', 0, 500, 102)
+        plt_input = st.number_input('Platelets (cells/µL)', 0, 1000000, 217000)
+        ast = st.number_input('AST (U/L)', 0, 500, 24)
     with c3:
-        alt = st.number_input('ALT (LAB_V_num_ALT, U/L)', 0, 500, 24)
+        alt = st.number_input('ALT (U/L)', 0, 500, 24)
         
         # Scale platelets (in thousands) solely for the FIB-4 index formula
         plt_thousands = (plt_input / 1000.0) if plt_input > 0 else (MEDIANAS['LAB_V_num_PLT'] / 1000.0)
